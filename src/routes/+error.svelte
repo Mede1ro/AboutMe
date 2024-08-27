@@ -1,0 +1,1 @@
+<h1 class="text-green-500 text-5xl text-center">Oops! Ocorreu um erro!</h1>
