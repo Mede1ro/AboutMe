@@ -1,5 +1,140 @@
 <script>
+    // @ts-nocheck
+
+    import { onMount } from "svelte";
+    // @ts-ignore
     import Teste from "$lib/Navbar.svelte";
+
+    const gitUser = "Mede1ro";
+    let repos = [];
+    let repoAv = "";
+
+    /**
+     * @type {number}
+     */
+    let idade;
+
+    onMount(() => {
+        const avatar = document.getElementById("avatar");
+
+        fetch(`https://api.github.com/users/${gitUser}`)
+            .then((response) => response.json())
+            .then((data) => {
+                // @ts-ignore
+                avatar.src = data.avatar_url;
+                repoAv = data.avatar_url;
+            })
+            .catch((error) =>
+                console.error("Erro ao carregar avatar do GitHub:", error),
+            );
+
+        fetch(`https://api.github.com/users/${gitUser}/repos`)
+            .then((response) => response.json())
+            .then((data) => {
+                repos = data;
+            })
+            .catch((error) =>
+                console.error(
+                    "Erro ao carregar repositórios do GitHub:",
+                    error,
+                ),
+            );
+
+        fetch(`https://api.github.com/repos/${gitUser}/{repo}`)
+            .then((response) => response.json())
+            .then((data) => {
+                const stars = data.stargazers_count;
+                console.log(`O repositório tem ${stars} estrelas.`);
+            })
+            .catch((error) =>
+                console.error("Erro ao carregar dados do repositório:", error),
+            );
+
+        // Atualiza o relógio a cada segundo
+        updateClock(); // Atualiza imediatamente
+        const intervalId = setInterval(updateClock, 1000);
+
+        // Calcula a idade e exibe
+        idade = calcularIdade(2005, 12);
+
+        return () => clearInterval(intervalId);
+    });
+
+    function updateClock() {
+        const clockElement = document.getElementById("clock");
+        const now = new Date();
+
+        // Converte o horário local para o horário de Brasília (GMT-3)
+        const brtOffset = -3; // Fuso horário de Brasília (GMT-3)
+        const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+        const brtTime = new Date(utc + 3600000 * brtOffset);
+
+        // Obtém horas, minutos e segundos
+        let hours = brtTime.getHours();
+        const minutes = brtTime.getMinutes().toString().padStart(2, "0");
+        const seconds = brtTime.getSeconds().toString().padStart(2, "0");
+        const period = hours >= 12 ? "PM" : "AM";
+
+        // Converte horas para o formato 12 horas
+        hours = hours % 12;
+        hours = hours ? hours : 12; // O horário 0 deve ser 12
+        const formattedHours = hours.toString().padStart(2, "0");
+
+        // @ts-ignore
+        clockElement.textContent = `${formattedHours}:${minutes}:${seconds} ${period}`;
+    }
+
+    // @ts-ignore
+    function calcularIdade(anoNasc, mesNasc) {
+        const dataAtual = new Date();
+
+        const anoAtual = dataAtual.getFullYear();
+        const mesAtual = dataAtual.getMonth() + 1;
+
+        let idade = anoAtual - anoNasc;
+
+        if (mesAtual < mesNasc) {
+            idade--; // Se sim, ainda não fez aniversário este ano
+        }
+
+        return idade;
+    }
+
+    function getLanguageColor(language) {
+        const colors = {
+            JavaScript: "#f1e05a",
+            TypeScript: "#2b7489",
+            Python: "#3572A5",
+            Java: "#b07219",
+            "C++": "#f34b7d",
+            "C#": "#178600",
+            Ruby: "#701516",
+            Go: "#00ADD8",
+            PHP: "#4F5D95",
+            Swift: "#ffac45",
+            Kotlin: "#A97BFF",
+            Rust: "#dea584",
+            Dart: "#00B4AB",
+            HTML: "#e34c26",
+            CSS: "#563d7c",
+            Shell: "#89e051",
+            Perl: "#0298c3",
+            "Objective-C": "#438eff",
+            Scala: "#c22d40",
+            Haskell: "#5e5086",
+            Lua: "#000080",
+            R: "#198CE7",
+            "Vim Script": "#199f4b",
+            TeX: "#3D6117",
+            Elixir: "#6e4a7e",
+            Erlang: "#B83998",
+            D: "#ba595e",
+            Julia: "#a270ba",
+            V: "#4f87c4",
+        };
+
+        return colors[language] || "#878787"; // Default color for unknown languages
+    }
 </script>
 
 <main class="px-96 py-10">
@@ -7,7 +142,7 @@
         id="home"
         class="container mx-auto mt-10 flex flex-row justify-between items-center"
     >
-        <div class="mt-32 flex flex-col">
+        <div class="mt-16 flex flex-col">
             <h1 class="nome text-9xl tracking-tighter -ml-2 -mt-20">Mede1ro</h1>
             <h4 class="job text-xl tracking-wide">Desenvolvedor Full-Stack</h4>
             <div class="flex flex-row gap-4 mt-2 socials">
@@ -107,31 +242,79 @@
             </div>
         </div>
 
-        <div class="profile rounded-3xl">
-            <img src="" alt="" />
+        <div class="profile rounded-3xl mr-20">
+            <img id="avatar" class="rounded-3xl" src="" alt="" />
         </div>
     </section>
 
     <section
-    id="about"
-    class="container mx-auto mt-10 grid grid-cols-2 gap-18 items-start"
->
-    <div class="flex flex-col mt-20 max-w-lg">
-        <h2 class="text-3xl hidden">Atividade</h2>
-        <div class="flex flex-row gap-4 atividade">
-            <img class="logo rounded-2xl" src="logo.jpg" alt="" />
-            <div class="flex flex-col gap-1 ml-3">
-                <h3 class="user text-2xl font-medium">@igoropioides</h3>
-                <h5 class="text-lg">Fetching...</h5>
-                <h5 class="text-lg">10:27:49 PM</h5>
+        id="about"
+        class="container mx-auto mt-10 grid grid-cols-2 gap-18 items-start"
+    >
+        <div class="flex flex-col mt-20 max-w-lg">
+            <h2 class="text-3xl hidden">Atividade</h2>
+            <div class="flex flex-row gap-4 atividade">
+                <img class="logo rounded-2xl" src="shark.gif" alt="" />
+                <div class="flex flex-col gap-1 ml-3">
+                    <h3 class="user text-2xl font-medium">@igoropioides</h3>
+                    <h5 class="text-lg">Fetching...</h5>
+                    <h5 id="clock" class="text-lg"> </h5>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="bio mt-16 max-w-lg">
-    </div>
-</section>
+        <div class="bio mt-16 max-w-lg">
+            Olá, meu nome é Igor e tenho <span>{idade}</span> anos. Sou
+            desenvolvedor desde <span>2023</span> e comecei minha jornada na
+            programação em
+            <span>2020</span>. Sou apaixonado por tecnologia e estou
+            constantemente em busca de novos conhecimentos e desafios. No meu
+            <span
+                ><a href="https://github.com/Mede1ro" target="_blank">GitHub</a
+                ></span
+            >, você encontrará uma coleção dos meus projetos e contribuições.
+        </div>
+    </section>
 
+    <section id="code" class="container mx-auto mt-40">
+        <h1 class="text-center text-3xl mb-6">
+            <span class="font-bold" style="color: #1f2937;">code</span>:work
+        </h1>
+        <div class="repositorios grid grid-cols-2 gap-4 mx-auto max-w-5xl">
+            {#each repos as repo (repo.id)}
+                <div class="repo rounded-lg w-[490px] h-[140px] p-4 bg-gray-800">
+                    <div class="repo-info-user flex items-center gap-2 mt-2">
+                        <img
+                            class="repoAv w-[25px] h-[25px] rounded-full"
+                            src={repoAv}
+                            alt=""
+                        />
+                        <h3 class="repo-user text-base">{gitUser}</h3>
+                    </div>
+                    <h2 class="repo-info mt-3 ml-1 text-xl font-medium">
+                        {repo.name}
+                    </h2>
+                    <div class="flex flex-row mt-4 ml-1 gap-4 items-center">
+                        <p class="language flex items-center">
+                            <span
+                                class="dot-language w-[10px] h-[10px] rounded-full mr-2"
+                                style="background-color: {getLanguageColor(
+                                    repo.language,
+                                )};"
+                            >
+                            </span>
+                            {repo.language}
+                        </p>
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="none" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true" aria-labelledby="star icon" color="var(--text-secondary)"><path d="M8.58737 8.23597L11.1849 3.00376C11.5183 2.33208 12.4817 2.33208 12.8151 3.00376L15.4126 8.23597L21.2215 9.08017C21.9668 9.18848 22.2638 10.0994 21.7243 10.6219L17.5217 14.6918L18.5135 20.4414C18.6409 21.1798 17.8614 21.7428 17.1945 21.3941L12 18.678L6.80547 21.3941C6.1386 21.7428 5.35909 21.1798 5.48645 20.4414L6.47825 14.6918L2.27575 10.6219C1.73617 10.0994 2.03322 9.18848 2.77852 9.08017L8.58737 8.23597Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            <p class="ml-2">{repo.stargazers_count}</p>
+                        </div>
+                    </div>
+                </div>
+            {/each}
+        </div>
+    </section>
+    
 </main>
 
 <style>
@@ -170,11 +353,19 @@
         user-select: none;
     }
 
+    .profile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Faz com que a imagem cubra o container mantendo sua proporção */
+        image-rendering: -webkit-optimize-contrast;
+    }
+
     .profile {
-        width: 425px;
+        width: 420px;
         height: 400px;
         background-color: #1c1f2175;
         animation: float 8s infinite;
+        object-fit: cover;
     }
 
     main {
@@ -189,5 +380,55 @@
     .logo {
         width: 125px;
         height: 125px;
+    }
+
+    .bio span {
+        background-color: #1c2021d2;
+        padding: 3px 6px;
+        border-radius: 6px;
+        font-size: 16px;
+    }
+
+    .bio::before {
+        content: "@";
+        position: absolute;
+        top: 520px;
+        right: 400px;
+        font-size: 250px;
+        font-weight: 700;
+        z-index: -1;
+        opacity: 0.25;
+        color: transparent;
+        -webkit-text-stroke: 2px white;
+        letter-spacing: -0.52em;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .repositorios {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        justify-items: center; /* Centraliza os itens da grid horizontalmente */
+    }
+
+    .repo {
+        background-color: #1c1f2175;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: start;
+        width: 490px;
+        height: 140px;
+        padding: 1rem;
+    }
+
+    .repo-user {
+        font-family: "Poppins", sans-serif;
+        color: #d9dee0;
+    }
+
+    .repo-info {
+        font-family: "Space Grotesk", sans-serif;
     }
 </style>
